@@ -1,3 +1,4 @@
+import 'package:background_hiit_timer/models/interval_stage.dart';
 import 'package:background_hiit_timer/models/interval_type.dart';
 import 'package:openhiit/core/models/interval_display_model.dart';
 import 'package:openhiit/core/models/timer_type.dart';
@@ -14,6 +15,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
     required String name,
     required int time,
     required String startSound,
+    required IntervalStage stage,
     String countdownSound = "",
     String halfwaySound = "",
     String endSound = "",
@@ -21,6 +23,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
     if (time > 0) {
       intervals.add(IntervalType(
         id: id,
+        stage: stage.name,
         workoutId: timer.id,
         time: time,
         name: name,
@@ -37,6 +40,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
   addInterval(
     id: Uuid().v4(),
     name: "Get Ready",
+    stage: IntervalStage.getReady,
     time: timer.timeSettings.getReadyTime,
     startSound: "",
     countdownSound: timer.soundSettings.countdownSound,
@@ -45,6 +49,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
   addInterval(
     id: Uuid().v4(),
     name: "Warmup",
+    stage: IntervalStage.warmup,
     time: timer.timeSettings.warmupTime,
     startSound: timer.soundSettings.workSound,
     countdownSound: timer.soundSettings.countdownSound,
@@ -54,6 +59,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
     addInterval(
       id: Uuid().v4(),
       name: "Rest",
+      stage: IntervalStage.rest,
       time: timer.timeSettings.restTime,
       startSound: timer.soundSettings.restSound,
       countdownSound: timer.soundSettings.countdownSound,
@@ -71,6 +77,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
         name: timer.activities.isEmpty || i >= timer.activities.length
             ? "Work"
             : timer.activities[i],
+        stage: IntervalStage.work,
         time: timer.timeSettings.workTime,
         startSound: timer.soundSettings.workSound,
         countdownSound: timer.soundSettings.countdownSound,
@@ -81,6 +88,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
         addInterval(
           id: Uuid().v4(),
           name: "Rest",
+          stage: IntervalStage.rest,
           time: timer.timeSettings.restTime,
           startSound: timer.soundSettings.restSound,
           countdownSound: timer.soundSettings.countdownSound,
@@ -92,6 +100,9 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
       addInterval(
         id: Uuid().v4(),
         name: timer.timeSettings.breakTime > 0 ? "Break" : "Rest",
+        stage: timer.timeSettings.breakTime > 0
+            ? IntervalStage.breakTime
+            : IntervalStage.rest,
         time: timer.timeSettings.breakTime > 0
             ? timer.timeSettings.breakTime
             : timer.timeSettings.restTime,
@@ -106,6 +117,7 @@ List<IntervalType> generateIntervalsFromTimer(TimerType timer,
   addInterval(
     id: Uuid().v4(),
     name: "Cooldown",
+    stage: IntervalStage.cooldown,
     time: timer.timeSettings.cooldownTime,
     startSound: timer.soundSettings.restSound,
     countdownSound: timer.soundSettings.countdownSound,

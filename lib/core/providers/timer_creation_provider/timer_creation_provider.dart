@@ -40,6 +40,25 @@ class TimerCreationProvider extends ChangeNotifier {
     }
   }
 
+  void setBackground(String stage, String? reference) {
+    final backgrounds = Map<String, String>.of(_timer.backgrounds);
+    if (reference == null) {
+      backgrounds.remove(stage);
+    } else {
+      backgrounds[stage] = reference;
+    }
+    _timer = _timer.copyWith({'backgrounds': backgrounds});
+    markEdited();
+    notifyListeners();
+  }
+
+  void setSound(String key, String value) {
+    _timer.soundSettings =
+        _timer.soundSettings.copyWith({}, updates: {key: value});
+    markEdited();
+    notifyListeners();
+  }
+
   void setTimerName(String name) {
     _timer = _timer.copyWith({
       'name': name,

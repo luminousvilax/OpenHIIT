@@ -1,3 +1,4 @@
+import 'package:openhiit/features/settings/ui/storage_cleanup_tile.dart';
 // settings_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
@@ -88,6 +89,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          SettingsSection(
+            title: const Text('Storage'),
+            tiles: const [CustomSettingsTile(child: StorageCleanupTile())],
           ),
           SettingsSection(
             title: const Text('About'),

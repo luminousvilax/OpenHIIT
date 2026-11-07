@@ -1,3 +1,4 @@
+import 'package:openhiit/core/media/media_store.dart';
 import 'package:background_hiit_timer/models/interval_type.dart';
 import 'package:flutter/material.dart';
 import 'package:openhiit/core/db/repositories/deprecated_workout_repository.dart';
@@ -93,16 +94,18 @@ class TimerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> pushTimer(TimerType timer) async {
-    _timers.insert(0, timer);
-    await _timerRepository.insertTimer(timer);
-    await _timerTimeSettingsRepository.insertTimeSettings(timer.timeSettings);
-    await _timerSoundSettingsRepository
-        .insertSoundSettings(timer.soundSettings);
-    await updateTimerOrder(_timers);
-    await pushIntervalsFromTimer(timer);
-    notifyListeners();
-  }
+  Future<void> pushTimer(TimerType timer) =>
+      MediaStore.instance.exclusive(() async {
+        _timers.insert(0, timer);
+        await _timerRepository.insertTimer(timer);
+        await _timerTimeSettingsRepository
+            .insertTimeSettings(timer.timeSettings);
+        await _timerSoundSettingsRepository
+            .insertSoundSettings(timer.soundSettings);
+        await updateTimerOrder(_timers);
+        await pushIntervalsFromTimer(timer);
+        notifyListeners();
+      });
 
   Future<void> pushTimerCopy(TimerType timer) async {
     timer.name = "${timer.name} Copy";
@@ -115,28 +118,29 @@ class TimerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateTimer(TimerType timer) async {
-    int index = _timers.indexWhere((t) => t.id == timer.id);
-    if (index != -1) {
-      _timers[index] = timer;
-      int timerRowsUpdated = await _timerRepository.updateTimer(timer);
-      Log.debug("Updated $timerRowsUpdated rows in timer table.");
-      int timeSettingsRowsUpdated = await _timerTimeSettingsRepository
-          .updateTimeSettings(timer.timeSettings);
-      Log.debug(
-          "Updated $timeSettingsRowsUpdated rows in timer_time_settings table.");
-      int soundSettingsRowsUpdated = await _timerSoundSettingsRepository
-          .updateSoundSettings(timer.soundSettings);
-      Log.debug(
-          "Updated $soundSettingsRowsUpdated rows in timer_sound_settings table.");
-      await _intervalProvider.deleteIntervals(timer.id);
-      await pushIntervalsFromTimer(timer);
-      Log.info("Timer with id ${timer.id} updated.");
-      notifyListeners();
-    } else {
-      Log.warning("Timer with id ${timer.id} not found for update.");
-    }
-  }
+  Future<void> updateTimer(TimerType timer) =>
+      MediaStore.instance.exclusive(() async {
+        int index = _timers.indexWhere((t) => t.id == timer.id);
+        if (index != -1) {
+          _timers[index] = timer;
+          int timerRowsUpdated = await _timerRepository.updateTimer(timer);
+          Log.debug("Updated $timerRowsUpdated rows in timer table.");
+          int timeSettingsRowsUpdated = await _timerTimeSettingsRepository
+              .updateTimeSettings(timer.timeSettings);
+          Log.debug(
+              "Updated $timeSettingsRowsUpdated rows in timer_time_settings table.");
+          int soundSettingsRowsUpdated = await _timerSoundSettingsRepository
+              .updateSoundSettings(timer.soundSettings);
+          Log.debug(
+              "Updated $soundSettingsRowsUpdated rows in timer_sound_settings table.");
+          await _intervalProvider.deleteIntervals(timer.id);
+          await pushIntervalsFromTimer(timer);
+          Log.info("Timer with id ${timer.id} updated.");
+          notifyListeners();
+        } else {
+          Log.warning("Timer with id ${timer.id} not found for update.");
+        }
+      });
 
   bool timerExists(String id) {
     return _timers.any((timer) => timer.id == id);
@@ -159,15 +163,16 @@ class TimerProvider extends ChangeNotifier {
     return _intervalRepository.getIntervalsByTimerId(timerId);
   }
 
-  Future<void> deleteTimer(TimerType timer) async {
-    _timers.removeWhere((t) => t.id == timer.id);
-    await _timerRepository.deleteTimer(timer.id);
-    await _timerTimeSettingsRepository
-        .deleteTimeSettings(timer.timeSettings.id);
-    await _timerSoundSettingsRepository
-        .deleteSoundSettings(timer.soundSettings.id);
-    await _intervalProvider.deleteIntervals(timer.id);
-    await updateTimerOrder(_timers);
-    notifyListeners();
-  }
+  Future<void> deleteTimer(TimerType timer) =>
+      MediaStore.instance.exclusive(() async {
+        _timers.removeWhere((t) => t.id == timer.id);
+        await _timerRepository.deleteTimer(timer.id);
+        await _timerTimeSettingsRepository
+            .deleteTimeSettings(timer.timeSettings.id);
+        await _timerSoundSettingsRepository
+            .deleteSoundSettings(timer.soundSettings.id);
+        await _intervalProvider.deleteIntervals(timer.id);
+        await updateTimerOrder(_timers);
+        notifyListeners();
+      });
 }

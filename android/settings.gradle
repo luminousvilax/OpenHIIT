@@ -1,4 +1,29 @@
 pluginManagement {
+    // Gradle does not automatically use the terminal's HTTP proxy variables.
+    // Explicit JVM proxy properties take precedence over environment settings.
+    ["http", "https"].each { protocol ->
+        def proxyAddress = System.getenv("${protocol}_proxy") ?:
+            System.getenv("${protocol.toUpperCase()}_PROXY")
+        if (proxyAddress && !System.getProperty("${protocol}.proxyHost")) {
+            URI proxy
+            try {
+                proxy = new URI(proxyAddress)
+            } catch (java.net.URISyntaxException ignored) {
+                throw new GradleException("Invalid proxy URL. Configure a valid HTTP proxy or user-level JVM proxy properties.")
+            }
+            if (proxy.scheme != "http" || !proxy.host || proxy.userInfo) {
+                throw new GradleException(
+                    "Use an unauthenticated http:// proxy URL, or configure JVM proxy properties in your user-level gradle.properties.")
+            }
+            System.setProperty("${protocol}.proxyHost", proxy.host)
+            System.setProperty("${protocol}.proxyPort",
+                (proxy.port >= 0 ? proxy.port : 80).toString())
+        }
+    }
+    if (!System.getProperty("http.nonProxyHosts")) {
+        System.setProperty("http.nonProxyHosts", "localhost|127.*|[::1]")
+    }
+
     def flutterSdkPath = {
         def properties = new Properties()
         file("local.properties").withInputStream { properties.load(it) }

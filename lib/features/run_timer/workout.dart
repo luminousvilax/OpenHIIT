@@ -1,3 +1,5 @@
+import 'package:openhiit/core/media/media_store.dart';
+import 'package:openhiit/shared/ui/widgets/managed_background.dart';
 import 'package:background_hiit_timer/background_timer.dart';
 import 'package:background_hiit_timer/background_timer_controller.dart';
 import 'package:background_hiit_timer/models/interval_type.dart';
@@ -34,6 +36,7 @@ class RunTimer extends StatefulWidget {
 class RunTimerState extends State<RunTimer> {
   final CountdownController _controller = CountdownController(autoStart: true);
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final Object _mediaLease = Object();
   bool _paused = false;
   bool _changeVolume = false;
   double _volume = .8;
@@ -45,6 +48,15 @@ class RunTimerState extends State<RunTimer> {
   @override
   void initState() {
     super.initState();
+    MediaStore.instance.retain(_mediaLease, {
+      ...MediaStore.referencesFor(widget.timer),
+      for (final interval in widget.intervals) ...[
+        interval.startSound,
+        interval.halfwaySound,
+        interval.countdownSound,
+        interval.endSound
+      ],
+    });
     Log.info("starting workout: ${widget.timer.name}");
     WakelockPlus.enable();
     loadPreferences();
@@ -64,6 +76,7 @@ class RunTimerState extends State<RunTimer> {
 
   @override
   void dispose() {
+    MediaStore.instance.release(_mediaLease);
     _controllerCenter.dispose();
     WakelockPlus.disable();
     super.dispose();
@@ -172,14 +185,20 @@ class RunTimerState extends State<RunTimer> {
                       intervalTiles: intervalTiles,
                       showMinutes: widget.timer.showMinutes);
 
+              final index = timerState.currentInterval;
+              final stage = index >= 0 && index < widget.intervals.length
+                  ? widget.intervals[index].stageType
+                  : null;
               return Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(
+                  ManagedBackground(
+                    reference: widget.timer.backgrounds[stage],
                     color: backgroundColor(timerState.status),
-                    child: AnnotatedRegion<SystemUiOverlayStyle>(
-                      value: SystemUiOverlayStyle.light,
-                      child: SafeArea(child: workoutView),
-                    ),
+                  ),
+                  AnnotatedRegion<SystemUiOverlayStyle>(
+                    value: SystemUiOverlayStyle.light,
+                    child: SafeArea(child: workoutView),
                   ),
                   TimerComplete(
                     controller: _controllerCenter,

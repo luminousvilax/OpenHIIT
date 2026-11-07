@@ -16,6 +16,7 @@ class TimerType {
   int color;
   TimerTimeSettings timeSettings;
   TimerSoundSettings soundSettings;
+  Map<String, String> backgrounds;
 
   TimerType({
     required this.id,
@@ -23,13 +24,14 @@ class TimerType {
     required this.timerIndex,
     required this.timeSettings,
     required this.soundSettings,
+    Map<String, String>? backgrounds,
     this.totalTime = 0,
     this.intervals = 0,
     this.activeIntervals = 0,
     this.activities = const [],
     this.showMinutes = 0,
     this.color = 4280391411, // blue
-  });
+  }) : backgrounds = Map.of(backgrounds ?? {});
 
   TimerType.empty()
       : id = "",
@@ -37,6 +39,7 @@ class TimerType {
         timerIndex = 0,
         timeSettings = TimerTimeSettings.empty(),
         soundSettings = TimerSoundSettings.empty(),
+        backgrounds = {},
         totalTime = 0,
         intervals = 0,
         activeIntervals = 0,
@@ -51,6 +54,7 @@ class TimerType {
       timerIndex: timerIndex,
       timeSettings: timeSettings,
       soundSettings: soundSettings,
+      backgrounds: backgrounds,
       totalTime: totalTime,
       intervals: intervals,
       activeIntervals: activeIntervals,
@@ -69,6 +73,7 @@ class TimerType {
       timerIndex: timerIndex,
       timeSettings: timeSettings.copyWithTimerId(newId),
       soundSettings: soundSettings.copyWithTimerId(newId),
+      backgrounds: backgrounds,
       totalTime: totalTime,
       intervals: intervals,
       activeIntervals: activeIntervals,
@@ -87,6 +92,7 @@ class TimerType {
       'intervals': intervals,
       'activeIntervals': activeIntervals,
       'activities': jsonEncode(activities),
+      'backgrounds': jsonEncode(backgrounds),
       'showMinutes': showMinutes,
       'color': color,
     };
@@ -98,6 +104,8 @@ class TimerType {
         timerIndex = map['timerIndex'] ?? 0,
         timeSettings = TimerTimeSettings.fromMap(map),
         soundSettings = TimerSoundSettings.fromMap(map),
+        backgrounds =
+            Map<String, String>.from(jsonDecode(map['backgrounds'] ?? '{}')),
         totalTime = map['totalTime'] ?? 0,
         intervals = map['intervals'] ?? 0,
         activeIntervals = map['activeIntervals'] ?? 0,
@@ -122,6 +130,7 @@ class TimerType {
           : updates['soundSettings'] != null
               ? TimerSoundSettings.fromJson(updates['soundSettings'])
               : soundSettings,
+      backgrounds: updates['backgrounds'] ?? backgrounds,
       totalTime: updates['totalTime'] ?? totalTime,
       intervals: updates['intervals'] ?? intervals,
       activeIntervals: updates['activeIntervals'] ?? activeIntervals,

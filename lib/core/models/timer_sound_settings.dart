@@ -1,6 +1,16 @@
+import 'package:background_hiit_timer/media_files.dart';
 import 'package:uuid/uuid.dart';
 
 class TimerSoundSettings {
+  static const defaults = {
+    'workSound': 'short-whistle',
+    'restSound': 'short-rest-beep',
+    'halfwaySound': 'short-halfway-beep',
+    'endSound': 'long-bell',
+    'countdownSound': 'countdown-beep',
+    'breakSound': 'horn',
+  };
+
   String id;
   String timerId;
   String workSound;
@@ -85,20 +95,23 @@ class TimerSoundSettings {
         breakSound = _resolveBreakSound(map.containsKey('breakSound'),
             map['breakSound'], map['restSound'] ?? "");
 
+  /// Portable configuration exports never contain installation-local media.
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'timerId': timerId,
-      'workSound': workSound,
-      'restSound': restSound,
-      'halfwaySound': halfwaySound,
-      'endSound': endSound,
-      'countdownSound': countdownSound,
-      'breakSound': breakSound,
-    };
+    final map = toMap();
+    for (final key in defaults.keys) {
+      if (MediaFiles.isLocal(map[key] as String)) map[key] = defaults[key];
+    }
+    return map;
   }
 
   factory TimerSoundSettings.fromJson(Map<String, dynamic> json) {
+    json = Map.of(json);
+    for (final key in defaults.keys) {
+      final value = json[key];
+      if (value is String && MediaFiles.isLocal(value)) {
+        json[key] = defaults[key];
+      }
+    }
     return TimerSoundSettings(
       id: json['id'] ?? "",
       timerId: json['timerId'] ?? "",

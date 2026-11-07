@@ -1,3 +1,5 @@
+import 'package:openhiit/core/media/media_store.dart';
+import 'package:openhiit/features/edit_timer/ui/widgets/tabs/background_tab/background_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:openhiit/core/logs/logs.dart';
@@ -26,6 +28,15 @@ class EditTimer extends StatefulWidget {
 
 class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
   late TabController _tabController;
+  final _soundTabKey = GlobalKey<SoundTabState>();
+  final Object _mediaLease = Object();
+  late TimerCreationProvider _draftProvider;
+
+  void _retainDraftMedia() {
+    MediaStore.instance
+        .retain(_mediaLease, MediaStore.referencesFor(_draftProvider.timer));
+  }
+
   late bool editing;
 
   final nameController = TextEditingController();
@@ -55,13 +66,13 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
 
     editing = widget.editing;
 
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     _tabController.addListener(() {
       // Only trigger when the user finishes changing tabs
       if (_tabController.indexIsChanging == false) {
         Log.debug("tab changed to index ${_tabController.index}");
-        if (_tabController.index == 2) {
+        if (_tabController.index == 3) {
           _onEditorTabAccessed();
         } else {
           setState(() {
@@ -84,6 +95,9 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
     buttonState = editing ? StartSaveState.start : StartSaveState.save;
 
     var timerCreationProvider = context.read<TimerCreationProvider>();
+    _draftProvider = timerCreationProvider;
+    _draftProvider.addListener(_retainDraftMedia);
+    _retainDraftMedia();
     final timer = timerCreationProvider.timer;
     final showMinutes = timer.showMinutes == 1;
     final ts = timer.timeSettings;
@@ -123,6 +137,8 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _draftProvider.removeListener(_retainDraftMedia);
+    MediaStore.instance.release(_mediaLease);
     _tabController.dispose();
     _scrollController.dispose();
     nameController.dispose();
@@ -181,6 +197,8 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
   }
 
   Future<void> _handleSubmit() async {
+    await _soundTabKey.currentState?.stopPreview();
+    if (!mounted) return;
     final isSaving = buttonState == StartSaveState.save;
     setButtonState(StartSaveState.saving);
 
@@ -285,6 +303,12 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
               scrollController: _scrollController,
             ),
             SoundTab(
+              key: _soundTabKey,
+              active: _tabController.index == 1,
+              onEdited: setButtonState,
+              scrollController: _scrollController,
+            ),
+            BackgroundTab(
               onEdited: setButtonState,
               scrollController: _scrollController,
             ),
@@ -426,6 +450,7 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
                 icon: Icon(
                   Icons.music_note,
                 )),
+            Tab(key: Key('background-tab'), icon: Icon(Icons.image_outlined)),
             Tab(
                 key: Key('edit-tab'),
                 icon: Icon(
@@ -464,6 +489,8 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
                   icon: Icon(Icons.timer), label: Text('General Tab')),
               NavigationRailDestination(
                   icon: Icon(Icons.music_note), label: Text('Sound Tab')),
+              NavigationRailDestination(
+                  icon: Icon(Icons.image_outlined), label: Text('Background')),
               NavigationRailDestination(
                   icon: Icon(Icons.fitness_center), label: Text('Edit Tab')),
             ],

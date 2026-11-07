@@ -39,7 +39,8 @@ dependencies:
   sqflite_common_ffi: ^2.4.0+2
   wakelock_plus: ^1.5.2
   flutter_material_color_picker: ^1.2.0
-  background_hiit_timer: ^1.2.3
+  background_hiit_timer:
+    path: packages/background_hiit_timer
   auto_size_text: ^3.0.0
   google_fonts: ^8.1.0
   shimmer: ^3.0.0

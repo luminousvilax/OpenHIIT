@@ -80,6 +80,9 @@ Check out the [OpenHIIT Roadmap](https://github.com/users/a-mabe/projects/3) to 
 
 ### Build from Source
 
+For Android development APKs, release signing, download mirrors, and installation,
+see [Android build instructions](docs/android-build.md).
+
 1. **Install Flutter** — follow the [official Flutter installation guide](https://flutter.dev/docs/get-started/install) to set up Flutter and the Dart SDK.
 
 2. **Clone the repository:**

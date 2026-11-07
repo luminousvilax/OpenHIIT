@@ -1,5 +1,20 @@
 allprojects {
     repositories {
+        // Flutter's plugin also adds a repository. Route its engine artifacts
+        // exclusively here so a slow upstream repository cannot win resolution.
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "FlutterEngine"
+                    def storageBase = System.getenv("FLUTTER_STORAGE_BASE_URL") ?:
+                        "https://storage.flutter-io.cn"
+                    url = uri("${storageBase.replaceAll('/+$', '')}/download.flutter.io")
+                }
+            }
+            filter {
+                includeGroup("io.flutter")
+            }
+        }
         google()
         mavenCentral()
     }

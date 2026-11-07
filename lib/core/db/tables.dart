@@ -41,7 +41,8 @@ const createIntervalTableQuery = '''
         startSound TEXT,
         halfwaySound TEXT,
         countdownSound TEXT,
-        endSound TEXT
+        endSound TEXT,
+        stage TEXT NOT NULL DEFAULT ''
       )
     ''';
 
@@ -55,7 +56,8 @@ const createTimerTableQuery = '''
         activeIntervals INTEGER,
         activities TEXT,
         showMinutes INTEGER,
-        color INTEGER
+        color INTEGER,
+        backgrounds TEXT NOT NULL DEFAULT '{}'
       )
     ''';
 
