@@ -26,7 +26,7 @@ class _BackgroundTabState extends State<BackgroundTab> {
     setState(() => _importing = true);
     String? reference;
     try {
-      reference = await pickMedia(audio: false);
+      reference = await pickBackgroundImage(context);
       if (reference == null || !mounted) return;
       context
           .read<TimerCreationProvider>()
@@ -57,7 +57,7 @@ class _BackgroundTabState extends State<BackgroundTab> {
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
           child: Text(
-              'Choose a background for each stage. Images are copied into the app and cropped to fill the screen. Clear an image to use the original stage color.'),
+              'Choose a background for each stage, then drag and zoom to crop. Card previews fill the frame; cropped workout backgrounds are shown in full. Clear an image to use the original stage color.'),
         ),
         for (final stage in IntervalStage.values) ...[
           Builder(builder: (context) {
@@ -72,6 +72,7 @@ class _BackgroundTabState extends State<BackgroundTab> {
                     child: Stack(fit: StackFit.expand, children: [
                       ManagedBackground(
                           reference: reference,
+                          fit: BoxFit.cover,
                           color: getIntervalColor(stage.label)),
                       Center(
                           child: Text(stage.label,
@@ -88,7 +89,9 @@ class _BackgroundTabState extends State<BackgroundTab> {
                         overflow: TextOverflow.ellipsis),
                     subtitle: reference == null
                         ? null
-                        : const Text('Centered crop · dark overlay'),
+                        : Text(MediaFiles.isCroppedImage(reference)
+                            ? 'Custom crop · dark overlay'
+                            : 'Centered crop · dark overlay'),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),

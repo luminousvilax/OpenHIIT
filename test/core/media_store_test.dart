@@ -227,6 +227,33 @@ void main() {
     expect(await store.scanUnused(), isEmpty);
   });
 
+  test('cropped PNG keeps its display policy, name, and cleanup protection',
+      () async {
+    final bytes = base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGNQSJgARAwQCgAcDgRBIqsFewAAAABJRU5ErkJggg==');
+    final reference = await store.importCroppedImage(bytes, name: '训练背景.webp');
+    expect(MediaFiles.isCroppedImage(reference), isTrue);
+    expect(MediaFiles.displayName(reference), '训练背景.png');
+    expect(await (await store.file(reference)).readAsBytes(), bytes);
+    expect(await store.scanUnused(), isEmpty);
+    store.releasePending(reference);
+    saved.add(reference);
+    expect(await store.scanUnused(), isEmpty);
+    saved.clear();
+    expect((await store.cleanUnused()).deleted, 1);
+    expect(await (await store.file(reference)).exists(), isFalse);
+    expect(
+        MediaFiles.isCroppedImage('local:images/uuid_crop1-name.png'), isFalse);
+  });
+
+  test('invalid cropped bytes create no managed file', () async {
+    await expectLater(
+        store.importCroppedImage(Uint8List.fromList([1, 2, 3]),
+            name: 'bad.png'),
+        throwsA(anything));
+    expect(await store.scanUnused(), isEmpty);
+  });
+
   test('rejects empty files and files exceeding the import limit', () async {
     final source = File('${temporary.path}/large.wav');
     final handle = await source.open(mode: FileMode.write);

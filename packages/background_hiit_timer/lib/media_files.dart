@@ -5,6 +5,11 @@ import 'package:path_provider/path_provider.dart';
 
 /// References are relative to this installation's private media directory.
 abstract final class MediaFiles {
+  static const croppedImagePrefix = 'crop1-';
+
+  static bool isCroppedImage(String reference) =>
+      reference.startsWith('local:images/$croppedImagePrefix');
+
   static bool isLocal(String value) => value.startsWith('local:');
 
   static String relativePath(String reference) {
@@ -48,7 +53,10 @@ abstract final class MediaFiles {
   }
 
   static String displayName(String reference) {
-    final name = p.posix.basename(reference);
+    var name = p.posix.basename(reference);
+    if (isCroppedImage(reference)) {
+      name = name.substring(croppedImagePrefix.length);
+    }
     return name.length > 37 && name[36] == '_' ? name.substring(37) : name;
   }
 

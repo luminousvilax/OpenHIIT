@@ -138,36 +138,61 @@ class MediaStore {
         } else {
           await _validateImage(bytes);
         }
-        var name = p
-            .basenameWithoutExtension(source.path)
-            .replaceAll(RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*]'), '_');
-        if (name.isEmpty) name = audio ? 'audio' : 'image';
-        final limitedName = StringBuffer();
-        var nameBytes = 0;
-        // Leave room for the UUID, extension and temporary .part suffix within
-        // a 255-byte filename, without splitting Unicode code points.
-        for (final rune in name.runes.take(80)) {
-          final character = String.fromCharCode(rune);
-          final bytes = utf8.encode(character).length;
-          if (nameBytes + bytes > 200) break;
-          limitedName.write(character);
-          nameBytes += bytes;
-        }
-        name = limitedName.toString();
-        final reference =
-            'local:${audio ? 'audio' : 'images'}/${const Uuid().v4()}_$name$extension';
-        final target = await file(reference);
-        await target.parent.create(recursive: true);
-        final temporary = File('${target.path}.part');
-        try {
-          await temporary.writeAsBytes(bytes, flush: true);
-          await temporary.rename(target.path);
-          _pending.add(reference);
-          return reference;
-        } finally {
-          if (await temporary.exists()) await temporary.delete();
-        }
+        return _writeImport(bytes,
+            name: p.basenameWithoutExtension(source.path),
+            extension: extension,
+            audio: audio);
       });
+
+  Future<String> importCroppedImage(Uint8List bytes, {required String name}) =>
+      exclusive(() async {
+        if (bytes.isEmpty || bytes.length > maxFileBytes) {
+          throw const FormatException('Cropped image exceeds 20 MB.');
+        }
+        await _validateImage(bytes);
+        return _writeImport(bytes,
+            name: p.basenameWithoutExtension(name),
+            extension: '.png',
+            audio: false,
+            cropped: true);
+      });
+
+  Future<String> _writeImport(
+    Uint8List bytes, {
+    required String name,
+    required String extension,
+    required bool audio,
+    bool cropped = false,
+  }) async {
+    name = name.replaceAll(RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*]'), '_');
+    if (name.isEmpty) name = audio ? 'audio' : 'image';
+    final limitedName = StringBuffer();
+    var nameBytes = 0;
+    // Leave room for the UUID, extension and temporary .part suffix within
+    // a 255-byte filename, without splitting Unicode code points.
+    for (final rune in name.runes.take(80)) {
+      final character = String.fromCharCode(rune);
+      final bytes = utf8.encode(character).length;
+      if (nameBytes + bytes > 200) break;
+      limitedName.write(character);
+      nameBytes += bytes;
+    }
+    name = limitedName.toString();
+    final prefix = cropped ? MediaFiles.croppedImagePrefix : '';
+    final reference =
+        'local:${audio ? 'audio' : 'images'}/$prefix${const Uuid().v4()}_$name$extension';
+    final target = await file(reference);
+    await target.parent.create(recursive: true);
+    final temporary = File('${target.path}.part');
+    try {
+      await temporary.writeAsBytes(bytes, flush: true);
+      await temporary.rename(target.path);
+      _pending.add(reference);
+      return reference;
+    } finally {
+      if (await temporary.exists()) await temporary.delete();
+    }
+  }
 
   static Future<void> _decodeImage(Uint8List bytes) async {
     final codec = await ui.instantiateImageCodec(bytes,

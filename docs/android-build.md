@@ -167,8 +167,22 @@ python3 tool/test_android_media.py --device <device-id>
 
 The device wrapper copies sources into a temporary project with a consistent
 test-only application ID, namespace, and manifests, and disables automatic
-uninstall. It leaves the normal project identity unchanged. To also test timer
-progression and playback requests while backgrounded and locked:
+uninstall. It leaves the normal project identity unchanged. To test the image
+crop flow through the real Android file picker:
+
+```sh
+python3 tool/test_android_media.py --device <device-id> --crop
+```
+
+Unlock the phone first and leave it connected without interacting with the
+screen during the run. The wrapper uses ADB to cancel or select its own synthetic
+images in DocumentsUI. It removes its temporary Downloads folder afterward and
+saves test logs, fixture images, and screenshots under
+`build/device-crop/<UTC timestamp>/`. This suite does not lock the phone or
+change its screen-timeout settings.
+
+To also test timer progression and playback requests while backgrounded and
+locked:
 
 ```sh
 python3 tool/test_android_media.py --device <device-id> --background

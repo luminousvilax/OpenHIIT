@@ -1,4 +1,5 @@
 import 'package:background_hiit_timer/models/interval_stage.dart';
+import 'package:background_hiit_timer/media_files.dart';
 import 'package:background_hiit_timer/models/interval_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openhiit/core/models/timer_sound_settings.dart';
@@ -36,6 +37,18 @@ void main() {
     final imported = TimerType.fromJson(json);
     expect(imported.soundSettings.countdownSound, 'countdown-beep');
     expect(imported.backgrounds, isEmpty);
+  });
+
+  test('cropped display policy survives persistence and timer copies', () {
+    const cropped =
+        'local:images/crop1-01234567-89ab-cdef-0123-456789abcdef_photo.png';
+    final timer = TimerType.empty()..backgrounds['work'] = cropped;
+    final loaded = TimerType.fromMap(timer.toMap());
+    expect(MediaFiles.isCroppedImage(loaded.backgrounds['work']!), isTrue);
+    final copy = loaded.copyNew();
+    copy.backgrounds.clear();
+    expect(loaded.backgrounds['work'], cropped);
+    expect(timer.toJson().toString(), isNot(contains('local:')));
   });
 
   test('copies retain media references with independent background maps', () {

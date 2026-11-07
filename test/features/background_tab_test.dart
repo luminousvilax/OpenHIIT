@@ -45,6 +45,7 @@ void main() {
     final preview = tester.widget<ManagedBackground>(
         find.descendant(of: card, matching: find.byType(ManagedBackground)));
     expect(preview.reference, image);
+    expect(preview.fit, BoxFit.cover);
     await tester.tap(clear);
     await tester.pump();
     expect(draft.timer.backgrounds.containsKey('work'), isFalse);

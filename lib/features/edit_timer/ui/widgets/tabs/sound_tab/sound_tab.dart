@@ -98,7 +98,7 @@ class SoundTabState extends State<SoundTab> with WidgetsBindingObserver {
     String? reference;
     try {
       await stopPreview();
-      reference = await pickMedia(audio: true);
+      reference = await pickAudio();
       if (reference == null || !mounted) return;
       _set(field, reference);
       await _preview(field, reference);
