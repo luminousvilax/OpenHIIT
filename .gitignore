@@ -47,3 +47,4 @@ app.*.map.json
 /screenshots/
 
 **/.cxx
+packages/background_hiit_timer/pubspec.lock

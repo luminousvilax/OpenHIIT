@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -139,9 +140,20 @@ class MediaStore {
         }
         var name = p
             .basenameWithoutExtension(source.path)
-            .replaceAll(RegExp(r'[^a-zA-Z0-9_.-]'), '_');
+            .replaceAll(RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*]'), '_');
         if (name.isEmpty) name = audio ? 'audio' : 'image';
-        if (name.length > 80) name = name.substring(0, 80);
+        final limitedName = StringBuffer();
+        var nameBytes = 0;
+        // Leave room for the UUID, extension and temporary .part suffix within
+        // a 255-byte filename, without splitting Unicode code points.
+        for (final rune in name.runes.take(80)) {
+          final character = String.fromCharCode(rune);
+          final bytes = utf8.encode(character).length;
+          if (nameBytes + bytes > 200) break;
+          limitedName.write(character);
+          nameBytes += bytes;
+        }
+        name = limitedName.toString();
         final reference =
             'local:${audio ? 'audio' : 'images'}/${const Uuid().v4()}_$name$extension';
         final target = await file(reference);

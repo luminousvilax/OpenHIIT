@@ -47,6 +47,45 @@ void main() {
     expect(await store.scanUnused(), hasLength(1));
   });
 
+  for (final name in ['休息提示', '準備完了', 'café', 'تمرين', '训练 🎵 e\u0301']) {
+    test('preserves the imported audio filename "$name"', () async {
+      final reference = await importWav(name);
+      expect(MediaFiles.displayName(reference), '$name.wav');
+      await File('${temporary.path}/$name.wav').delete();
+      // Resolve it again through the same path used by preview and playback.
+      final reopened = MediaStore(directory: await store.directory);
+      expect(await (await reopened.file(reference)).length(), 44);
+      store.releasePending(reference);
+      saved.add(reference);
+      expect(await store.scanUnused(), isEmpty);
+    });
+  }
+
+  test('bounds long Unicode filenames without splitting a code point',
+      () async {
+    final reference = await importWav(List.filled(60, '🎵').join());
+    final displayed = MediaFiles.displayName(reference);
+    expect(displayed, '${List.filled(50, '🎵').join()}.wav');
+    expect(
+        utf8.encode((await store.file(reference)).uri.pathSegments.last).length,
+        lessThanOrEqualTo(255));
+    expect(await (await store.file(reference)).length(), 44);
+  });
+
+  test('preserves a Unicode MP3 filename', () async {
+    final source = File('${temporary.path}/运动提示.mp3');
+    await source.writeAsBytes('ID3'.codeUnits);
+    final reference = await store.importFile(source, audio: true);
+    expect(MediaFiles.displayName(reference), '运动提示.mp3');
+    expect(await (await store.file(reference)).readAsBytes(), 'ID3'.codeUnits);
+  });
+
+  test('sanitizes unsafe characters while preserving Unicode', () async {
+    final reference = await importWav('训练:提示?*');
+    expect(MediaFiles.displayName(reference), '训练_提示__.wav');
+    expect(await (await store.file(reference)).length(), 44);
+  });
+
   test('keeps every saved reference and deletes only unused private copies',
       () async {
     final work = await importWav('work');
@@ -205,7 +244,14 @@ void main() {
       'local:audio/../../keep.wav',
       'local:/tmp/keep.wav',
       'local:audio/..',
-      r'local:audio/..\keep.wav'
+      r'local:audio/..\keep.wav',
+      'local:audio/id_训练/keep.wav',
+      r'local:audio/id_训练\keep.wav',
+      'local:audio/id_训练\u0000.wav',
+      'local:audio/id_训练\n.wav',
+      'local:audio/id_训练.wav\n',
+      'local:audio/id_训练:keep.wav',
+      'local:other/训练.wav',
     ]) {
       await expectLater(store.file(reference), throwsFormatException);
     }

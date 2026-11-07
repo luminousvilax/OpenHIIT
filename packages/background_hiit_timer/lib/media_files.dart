@@ -15,7 +15,8 @@ abstract final class MediaFiles {
     final parts = relative.split('/');
     if (parts.length != 2 ||
         !{'audio', 'images'}.contains(parts[0]) ||
-        !RegExp(r'^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$').hasMatch(parts[1]) ||
+        !RegExp(r'^[a-zA-Z0-9_-]').hasMatch(parts[1]) ||
+        RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*]').hasMatch(parts[1]) ||
         parts[1] == '.' ||
         parts[1] == '..') {
       throw const FormatException('Invalid local media reference.');
