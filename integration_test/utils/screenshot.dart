@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-takeScreenShot({binding, tester, String? screenShotName, bool? settle}) async {
+Future<void> takeScreenShot(
+    {binding, tester, String? screenShotName, bool? settle}) async {
   if (kIsWeb) {
     await binding.takeScreenshot(screenShotName);
     return;

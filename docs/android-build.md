@@ -26,13 +26,14 @@ to unrelated build failures; use a compatible SDK for routine release builds.
 
 ## Download mirrors and proxies
 
-The repository configures two different downloads:
+The repository configures the following download sources:
 
 | Download | Configuration |
 | --- | --- |
 | Gradle distribution ZIP | Aliyun URL in `android/gradle/wrapper/gradle-wrapper.properties`, using the smaller `bin` archive. |
 | Flutter engine Maven artifacts (`io.flutter`) | CFUG mirror, `https://storage.flutter-io.cn/download.flutter.io`, configured exclusively in `android/build.gradle`. |
 | Other Android and Maven dependencies | Existing Google Maven, Maven Central, and Gradle Plugin Portal repositories. |
+| Robolectric Android runtimes for host-side tests | Aliyun public Maven mirror, configured for unit-test JVMs in `android/app/build.gradle`. |
 
 Changing the Gradle ZIP URL does not change the engine artifact repository.
 The engine mirror applies to ordinary `flutter build` commands without requiring
@@ -65,6 +66,17 @@ personal `~/.gradle/gradle.properties`. Configure any extra bypass patterns ther
 with `systemProp.http.nonProxyHosts`; environment `NO_PROXY` is not translated.
 Loopback addresses bypass the proxy by default. See
 [Gradle's networking reference](https://docs.gradle.org/current/userguide/networking.html).
+
+Robolectric downloads its Android runtime separately from Gradle's dependency
+repositories. Host-side tests use the
+[Aliyun public Maven mirror](https://developer.aliyun.com/mirror/maven/) for this
+download. Override it for a test run with a JVM system property, for example:
+
+```sh
+cd android
+./gradlew :app:testDebugUnitTest \
+  -Drobolectric.dependency.repo.url=https://repo.maven.apache.org/maven2
+```
 
 ## Development APK
 

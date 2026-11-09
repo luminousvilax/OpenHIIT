@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:background_hiit_timer/media_files.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openhiit/core/media/background_crop.dart';
 import 'package:openhiit/core/media/media_store.dart';
@@ -119,6 +119,36 @@ void main() {
   }
 
   testWidgets(
+      'Android image selection uses the native picker and removes cache after crop cancel',
+      (tester) async {
+    const channel = MethodChannel('openhiit/media_picker');
+    late File cached;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      expect(call.method, 'pickFile');
+      expect(call.arguments, {'audio': false});
+      final cache = await temporary.createTemp('picker-cache-');
+      cached = await picker.source!.copy('${cache.path}/背景.png');
+      return cached.path;
+    });
+    addTearDown(() => TestDefaultBinaryMessengerBinding
+        .instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
+    final draft = await showBackgrounds(tester);
+    await choose(tester);
+    expect(await tester.runAsync(() => cached.exists()), isTrue);
+    await tester.tap(find.byTooltip('Cancel'));
+    await _until(tester, () {
+      final choose = find.byKey(const ValueKey('background-getReady-choose'));
+      return choose.evaluate().isNotEmpty &&
+          tester.widget<TextButton>(choose).onPressed != null;
+    });
+    expect(await tester.runAsync(() => cached.parent.exists()), isFalse);
+    expect(await tester.runAsync(() => picker.source!.exists()), isTrue);
+    expect(draft.timer.backgrounds['getReady'], 'local:images/existing.png');
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets(
       'canceling picker or crop preserves assignments and writes no files',
       (tester) async {
     var edits = 0;
@@ -148,7 +178,7 @@ void main() {
         await tester
             .runAsync(() => Directory('${temporary.path}/media').exists()),
         isFalse);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
   testWidgets(
       'dragged low-resolution crop applies and only the result is stored',
@@ -200,7 +230,7 @@ void main() {
                 matching: find.byType(Image)))
             .fit,
         BoxFit.cover);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
   testWidgets(
       'pinch zooms, rotation preserves crop ratio, and Reset restores it',
@@ -253,7 +283,7 @@ void main() {
     expect(await tester.runAsync(() => centerPixel(reset)), [0, 255, 0, 255]);
     reset.dispose();
     expect(tester.takeException(), isNull);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 
   testWidgets('failed image decode preserves previous assignment',
       (tester) async {
@@ -267,5 +297,5 @@ void main() {
     expect(draft.timer.backgrounds['getReady'], 'local:images/existing.png');
     expect(
         await tester.runAsync(() => MediaStore.instance.scanUnused()), isEmpty);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
 }
