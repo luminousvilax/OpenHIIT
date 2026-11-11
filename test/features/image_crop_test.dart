@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:background_hiit_timer/media_files.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openhiit/core/media/background_crop.dart';
 import 'package:openhiit/core/media/media_store.dart';
@@ -11,10 +11,12 @@ import 'package:openhiit/core/providers/timer_creation_provider/timer_creation_p
 import 'package:openhiit/features/edit_timer/ui/widgets/start_save_toggle.dart';
 import 'package:openhiit/features/edit_timer/ui/widgets/tabs/background_tab/background_tab.dart';
 import 'package:openhiit/shared/ui/widgets/image_crop_screen.dart';
+import 'package:openhiit/shared/ui/widgets/media_browser_screen.dart';
 import 'package:openhiit/shared/ui/widgets/managed_background.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/crop_image.dart';
+import '../helpers/media_browser_channel.dart';
 
 class _Picker extends FilePicker {
   _Picker(this.source);
@@ -114,26 +116,26 @@ void main() {
   Future<void> choose(WidgetTester tester) async {
     await tester.runAsync(() =>
         tester.tap(find.byKey(const ValueKey('background-getReady-choose'))));
+    await tester.pumpAndSettle();
+    if (find.byType(MediaBrowserScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(() => tester.tap(find.text('背景.png')));
+    }
     await _until(
         tester, () => find.byType(ImageCropScreen).evaluate().isNotEmpty);
   }
 
   testWidgets(
-      'Android image selection uses the native picker and removes cache after crop cancel',
+      'Android image selection uses the browser and removes cache after crop cancel',
       (tester) async {
-    const channel = MethodChannel('openhiit/media_picker');
     late File cached;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-      expect(call.method, 'pickFile');
-      expect(call.arguments, {'audio': false});
-      final cache = await temporary.createTemp('picker-cache-');
-      cached = await picker.source!.copy('${cache.path}/背景.png');
-      return cached.path;
-    });
-    addTearDown(() => TestDefaultBinaryMessengerBinding
-        .instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null));
+    mockBrowserSelection(
+        audio: false,
+        select: () async {
+          final cache = await temporary.createTemp('picker-cache-');
+          cached = await picker.source!.copy('${cache.path}/背景.png');
+          return cached.path;
+        });
+    addTearDown(clearBrowserChannel);
     final draft = await showBackgrounds(tester);
     await choose(tester);
     expect(await tester.runAsync(() => cached.exists()), isTrue);

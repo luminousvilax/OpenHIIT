@@ -179,16 +179,32 @@ python3 tool/test_android_media.py --device <device-id>
 
 The device wrapper copies sources into a temporary project with a consistent
 test-only application ID, namespace, and manifests, and disables automatic
-uninstall. It leaves the normal project identity unchanged. To test the image
-crop flow through the real Android file picker:
+uninstall. It leaves the normal project identity unchanged. To test the application
+media browser with real permission and folder dialogs:
+
+```sh
+python3 tool/test_android_media.py --device <device-id> --picker
+```
+
+This suite uses synthetic audio/images, exercises denied and full library access,
+shared read-only folder authorization, imports and crop cancellation, and runs a
+second fresh application process to verify restoration. It resets only the
+isolated test application's data, never the normal application's data. If the
+device blocks shell data clearing, it uninstalls only the disposable test app
+before reinstalling it. Temporary
+source files are removed afterward; logs and screenshots are saved under
+`build/device-picker/<UTC timestamp>/`.
+
+To test the image crop flow through the application browser:
 
 ```sh
 python3 tool/test_android_media.py --device <device-id> --crop
 ```
 
 Unlock the phone first and leave it connected without interacting with the
-screen during the run. The wrapper uses ADB to cancel or select its own synthetic
-images in DocumentsUI. It removes its temporary Downloads folder afterward and
+screen during the run. The wrapper handles the image permission dialog through
+ADB; Flutter drives the browser and crop controls using synthetic images. It
+removes its temporary Downloads folder afterward and
 saves test logs, fixture images, and screenshots under
 `build/device-crop/<UTC timestamp>/`. This suite does not lock the phone or
 change its screen-timeout settings.

@@ -1,18 +1,20 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:openhiit/core/media/background_crop.dart';
 import 'package:openhiit/core/media/media_store.dart';
 import 'package:openhiit/shared/ui/widgets/image_crop_screen.dart';
+import 'package:openhiit/shared/ui/widgets/media_browser_screen.dart';
 import 'package:path/path.dart' as p;
 
-Future<File?> _pickFile({required bool audio}) async {
+Future<File?> _pickFile(BuildContext context, {required bool audio}) async {
   if (defaultTargetPlatform == TargetPlatform.android) {
-    final path = await const MethodChannel('openhiit/media_picker')
-        .invokeMethod<String>('pickFile', {'audio': audio});
+    final path = await Navigator.of(context).push<String>(MaterialPageRoute(
+      builder: (_) => MediaBrowserScreen(audio: audio),
+    ));
     return path == null ? null : File(path);
   }
   final selection = await FilePicker.platform.pickFiles(
@@ -29,8 +31,8 @@ Future<File?> _pickFile({required bool audio}) async {
   return File(path);
 }
 
-Future<String?> pickAudio() async {
-  final source = await _pickFile(audio: true);
+Future<String?> pickAudio(BuildContext context) async {
+  final source = await _pickFile(context, audio: true);
   if (source == null) return null;
   try {
     return await MediaStore.instance.importFile(source, audio: true);
@@ -54,7 +56,7 @@ Future<String?> pickBackgroundImage(BuildContext context) async {
   final portraitPixels =
       BackgroundCrop.portraitSize(MediaQuery.sizeOf(context)) *
           MediaQuery.devicePixelRatioOf(context);
-  final source = await _pickFile(audio: false);
+  final source = await _pickFile(context, audio: false);
   if (source == null) return null;
   try {
     if (!context.mounted) return null;

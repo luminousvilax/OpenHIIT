@@ -10,11 +10,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openhiit/core/media/background_crop.dart';
 import 'package:openhiit/core/media/media_store.dart';
+import 'package:openhiit/core/media/media_browser.dart';
 import 'package:openhiit/core/providers/interval_provider/interval_provider.dart';
 import 'package:openhiit/core/providers/timer_creation_provider/timer_creation_provider.dart';
 import 'package:openhiit/core/providers/timer_provider/timer_provider.dart';
 import 'package:openhiit/features/edit_timer/ui/widgets/tabs/background_tab/background_tab.dart';
 import 'package:openhiit/shared/ui/widgets/image_crop_screen.dart';
+import 'package:openhiit/shared/ui/widgets/media_browser_screen.dart';
 import 'package:openhiit/shared/ui/widgets/managed_background.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -110,8 +112,37 @@ void main() {
             tester.widget<TextButton>(button).onPressed != null);
     await tester.ensureVisible(button);
     await tester.pumpAndSettle();
-    debugPrint('[CROP-TEST] PICK $action');
+    final access = await MediaBrowser().state(false);
+    if (access['permission'] == 'denied') {
+      debugPrint('[CROP-TEST] PERMISSION ALLOW');
+    }
     await tester.tap(button);
+    await until(
+        tester,
+        () =>
+            find.byType(MediaBrowserScreen).evaluate().isNotEmpty &&
+            find.byType(CircularProgressIndicator).evaluate().isEmpty);
+    await tester.pumpAndSettle();
+    if (action == 'CANCEL') {
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      return;
+    }
+    if (find.text(action).evaluate().isEmpty) {
+      for (final part in [
+        'Internal storage',
+        'Download',
+        const String.fromEnvironment('MEDIA_CROP_FOLDER')
+      ]) {
+        await until(
+            tester, () => find.text(part).hitTestable().evaluate().isNotEmpty);
+        await tester.tap(find.text(part).hitTestable().first);
+        await until(tester,
+            () => find.byType(CircularProgressIndicator).evaluate().isEmpty);
+        await tester.pumpAndSettle();
+      }
+    }
+    await tester.tap(find.text(action));
   }
 
   Future<void> choose(WidgetTester tester, String action) async {
@@ -138,8 +169,7 @@ void main() {
       (tester) async {
     await showBackgrounds(tester);
     await openPicker(tester, 'CANCEL');
-    // The system picker is external to Flutter; allow it to open before checking
-    // that the Choose action becomes enabled after the host presses Back.
+    // Closing the application browser must re-enable Choose without changing media.
     await Future<void>.delayed(const Duration(seconds: 2));
     await until(tester, () {
       final button = find.byKey(const ValueKey('background-getReady-choose'));

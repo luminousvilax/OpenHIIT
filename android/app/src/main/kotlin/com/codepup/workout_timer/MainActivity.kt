@@ -17,11 +17,7 @@ class MainActivity: FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger, "openhiit/media_picker"
         ).also { channel ->
             channel.setMethodCallHandler { call, result ->
-                if (call.method == "pickFile") {
-                    picker.pick(call.argument<Boolean>("audio") == true, result)
-                } else {
-                    result.notImplemented()
-                }
+                picker.handle(call, result)
             }
         }
     }
@@ -29,6 +25,11 @@ class MainActivity: FlutterActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (mediaPicker?.onActivityResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (mediaPicker?.onRequestPermissionsResult(requestCode) == true) return
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
