@@ -53,48 +53,54 @@ class TimerCompleteState extends State<TimerComplete> {
     return Visibility(
         visible: widget.visible,
         child: Stack(children: [
-          SizedBox.expand(
-              child: Container(
-            color: const Color.fromARGB(255, 0, 188, 202),
-            child: Align(
-              alignment: Alignment.center,
-              child: ConfettiWidget(
-                confettiController: widget.controller,
-                blastDirectionality: BlastDirectionality
-                    .explosive, // don't specify a direction, blast randomly
-                emissionFrequency: .03,
-                shouldLoop:
-                    true, // start again as soon as the animation is finished
-                colors: const [
-                  Colors.green,
-                  Colors.blue,
-                  Colors.pink,
-                  Colors.orange,
-                  Colors.purple
-                ], // manually specify the colors to be used
-                createParticlePath: drawStar, // define a custom shape/path.
-              ),
-            ),
-          )),
+          GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onDoubleTap: widget.onRestart,
+              child: SizedBox.expand(
+                  child: Container(
+                color: const Color.fromARGB(255, 0, 188, 202),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: ConfettiWidget(
+                    confettiController: widget.controller,
+                    blastDirectionality: BlastDirectionality
+                        .explosive, // don't specify a direction, blast randomly
+                    emissionFrequency: .03,
+                    shouldLoop:
+                        true, // start again as soon as the animation is finished
+                    colors: const [
+                      Colors.green,
+                      Colors.blue,
+                      Colors.pink,
+                      Colors.orange,
+                      Colors.purple
+                    ], // manually specify the colors to be used
+                    createParticlePath: drawStar, // define a custom shape/path.
+                  ),
+                ),
+              ))),
           Center(
               child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              // Let taps on the labels reach the background gesture detector.
+              IgnorePointer(
+                  child: Text(
                 'Nice job!',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 30.0,
                     fontWeight: FontWeight.bold),
-              ),
-              Text(
+              )),
+              IgnorePointer(
+                  child: Text(
                 'Completed: ${widget.timerName}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 20.0,
                     fontWeight: FontWeight.bold),
-              ),
+              )),
               SizedBox(
                 height: 40,
               ),
