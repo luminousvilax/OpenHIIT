@@ -52,11 +52,17 @@ class _ManagedBackgroundState extends State<ManagedBackground> {
             final file = snapshot.data;
             if (file == null) return const SizedBox.expand();
             final cropped = MediaFiles.isCroppedImage(widget.reference!);
-            final fit = widget.fit ?? (cropped ? BoxFit.contain : BoxFit.cover);
-            final coverCrop = cropped && fit == BoxFit.cover;
             return LayoutBuilder(builder: (context, constraints) {
               final size =
                   cropped ? constraints.biggest : MediaQuery.sizeOf(context);
+              // Integer crop/decode dimensions can slightly change the aspect
+              // ratio. Fill portrait backgrounds to avoid stage-color seams;
+              // landscape still shows the complete crop with colored margins.
+              final fit = widget.fit ??
+                  (cropped && size.width > size.height
+                      ? BoxFit.contain
+                      : BoxFit.cover);
+              final coverCrop = cropped && fit == BoxFit.cover;
               final scale = MediaQuery.devicePixelRatioOf(context);
               final decodeWidth =
                   ((coverCrop ? size.longestSide : size.width) * scale)

@@ -57,7 +57,7 @@ class _BackgroundTabState extends State<BackgroundTab> {
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
           child: Text(
-              'Choose a background for each stage, then drag and zoom to crop. Card previews fill the frame; cropped workout backgrounds are shown in full. Clear an image to use the original stage color.'),
+              'Choose a background for each stage, then drag and zoom to crop. Card previews and portrait workouts fill the frame; landscape workouts show the full crop. Clear an image to use the original stage color.'),
         ),
         for (final stage in IntervalStage.values) ...[
           Builder(builder: (context) {
