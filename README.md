@@ -22,14 +22,19 @@
 
 ## Table of Contents
 
-1. [Why OpenHIIT?](#why-openhiit)
-2. [Features](#features)
-3. [Roadmap](#roadmap)
-4. [Installation](#installation)
-5. [Usage](#usage)
-6. [Support](#support)
-7. [Contributing](#contributing)
-8. [License](#license)
+- [OpenHIIT](#openhiit)
+  - [Table of Contents](#table-of-contents)
+  - [Why OpenHIIT?](#why-openhiit)
+  - [Features](#features)
+  - [Highlights in this fork](#highlights-in-this-fork)
+  - [Roadmap](#roadmap)
+  - [Installation](#installation)
+    - [Download the App](#download-the-app)
+    - [Build from Source](#build-from-source)
+  - [Usage](#usage)
+  - [Support](#support)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ---
 
@@ -60,6 +65,18 @@
    <img src="https://github.com/user-attachments/assets/4b470c2f-96db-4e01-95c9-228cccb65316" width="170">
    &nbsp;&nbsp;&nbsp;
    <img src="https://github.com/user-attachments/assets/a74e76e5-4608-4303-a751-e156f1645335" width="170">
+</p>
+
+## Highlights in this fork
+
+- **Custom media support** - enjoy your favourite notice sound and fantastic backgrounds!
+
+<p align="center">
+   <img src="https://github.com/user-attachments/assets/d96fbec8-59f6-435d-b693-63c81d00885e" width="170">
+   &nbsp;&nbsp;&nbsp;
+   <img src="https://github.com/user-attachments/assets/9a8c5895-c137-4696-8aac-ee0588b800aa" width="170">
+   &nbsp;&nbsp;&nbsp;
+   <img src="https://github.com/user-attachments/assets/2ec165b8-62a1-4c2f-942c-9d77d33b577c" width="170">
 </p>
 
 ---
